@@ -1,0 +1,52 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+  # makes classes in src/ available to be used as services
+  # this creates a service per class whose id is the fully-qualified class name
+  App\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+  # controllers are imported separately to make sure services can be injected
+  # as action arguments even if you don't extend any base controller class
+  App\Controller\:
+    resource: '../src/Controller'
+    tags: ['controller.service_arguments']
+
+  # add more service definitions when explicit configuration is needed
+  # please note that last definitions always *replace* previous ones
+
+  query_bus:
+    class: 'App\Bus\QueryBus'
+
+  command_bus:
+    class: 'App\Bus\CommandBus'
+
+  redis_repository:
+    class: 'App\Module\Infrastructure\ExchangeRepositoryRedis'
+
+  check_lastest_exchange_rate_query_handler:
+    class: 'App\Module\Application\CheckLastestExchangeRateQueryHandler'
+    arguments: ['redis_repository']
+
+  update_exchange_rate_command_handler:
+    class: 'App\Module\Application\UpdateExchangeRateCommandHandler'
+    arguments: ['redis_repository']
+
+  exchange_rate_get_controller:
+    class: 'App\Controller\ExchangeRateGetController'
+    arguments: ['query_bus', 'check_lastest_exchange_rate_query_handler']
+
+  exchange_rate_patch_controller:
+    class: 'App\Controller\ExchangeRatePatchController'
+    arguments: ['command_bus', 'update_exchange_rate_command_handler']

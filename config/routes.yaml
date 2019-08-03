@@ -1,0 +1,8 @@
+get_rates:
+    path: /rates
+    methods:  [GET]
+    controller: App\Controller\ExchangeRateGetController::all
+
+patch_rates:
+    path: /update/{currency}/rate/{rate}
+    controller: App\Controller\ExchangeRatePatchController::update
